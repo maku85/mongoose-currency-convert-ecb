@@ -1,0 +1,75 @@
+{
+  "name": "mongoose-currency-convert-ecb",
+  "version": "0.1.0",
+  "description": "ECB currency rate provider for mongoose-currency-convert",
+  "keywords": [
+    "mongoose",
+    "plugin",
+    "currency",
+    "conversion",
+    "exchange-rate",
+    "mongodb",
+    "typescript",
+    "money"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "maku85",
+    "email": "makuma85@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maku85/mongoose-currency-convert.git"
+  },
+  "homepage": "https://github.com/maku85/mongoose-currency-convert#readme",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:esm": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json --outDir dist --declaration false && if [ -f dist/index.js ]; then cp dist/index.js dist/index.cjs; fi",
+    "build": "pnpm build:esm && pnpm build:cjs",
+    "clean": "rm -rf dist",
+    "prepare": "husky",
+    "lint": "biome check src --verbose",
+    "format": "biome format src --write",
+    "release": "semantic-release",
+    "prepublishOnly": "npm run build",
+    "test": "mocha --config .mocharc.json",
+    "test:watch": "mocha --watch --config .mocharc.json",
+    "coverage": "nyc npm test"
+  },
+  "peerDependencies": {
+    "mongoose-currency-convert": "^0.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/npm": "^12.0.2",
+    "@types/chai": "^5.2.2",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.7.0",
+    "chai": "^6.2.0",
+    "chai-as-promised": "^8.0.2",
+    "commitlint": "^20.1.0",
+    "husky": "^9.1.7",
+    "mocha": "^11.7.4",
+    "nyc": "^17.1.0",
+    "semantic-release": "^24.2.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
