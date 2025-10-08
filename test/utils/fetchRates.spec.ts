@@ -19,7 +19,7 @@ describe("FetchRates utility", () => {
 
     const rate = await getRateFromECB("EUR", "USD");
 
-    expect(rate).to.be.closeTo(1 / 1.12, 0.0001);
+    expect(rate).to.be.closeTo(1.12, 0.0001);
   });
 
   it("should convert USD to EUR", async () => {
@@ -30,7 +30,7 @@ describe("FetchRates utility", () => {
 
     const rate = await getRateFromECB("USD", "EUR");
 
-    expect(rate).to.be.closeTo(1.25, 0.0001);
+    expect(rate).to.be.closeTo(1 / 1.25, 0.0001);
   });
 
   it("should convert USD to GBP via EUR", async () => {
@@ -46,7 +46,7 @@ describe("FetchRates utility", () => {
 
     const rate = await getRateFromECB("USD", "GBP");
 
-    expect(rate).to.be.closeTo(0.85 / 1.25, 0.0001);
+  expect(rate).to.be.closeTo(0.85 / 1.25, 0.0001);
   });
 
   it("should return 1 for EUR to EUR", async () => {
