@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  mongoose-currency-convert-ecb: link:../../../../../../home/maku/snap/code/209/.local/share/pnpm/global/5/node_modules/mongoose-currency-convert-ecb
-
 importers:
 
   .:
@@ -14,9 +11,6 @@ importers:
       mongoose-currency-convert:
         specifier: ^0.1.0
         version: 0.1.0(mongoose@8.19.1)
-      mongoose-currency-convert-ecb:
-        specifier: link:../../../../../../home/maku/snap/code/209/.local/share/pnpm/global/5/node_modules/mongoose-currency-convert-ecb
-        version: link:../../../../../../home/maku/snap/code/209/.local/share/pnpm/global/5/node_modules/mongoose-currency-convert-ecb
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.2.5
