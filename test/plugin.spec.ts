@@ -28,7 +28,7 @@ describe("createEcbGetRate", () => {
     const getRate = pluginModule.createEcbGetRate();
 
     const result = await getRate("EUR", "USD");
-    expect(result).to.equal(1.5);
+    expect(result).to.be.closeTo(1 / 1.5, 0.0001);
   });
 
   it("should return inverse rate if from is not EUR", async () => {
@@ -40,7 +40,7 @@ describe("createEcbGetRate", () => {
     const getRate = pluginModule.createEcbGetRate();
 
     const result = await getRate("USD", "EUR");
-    expect(result).to.equal(2);
+    expect(result).to.be.closeTo(2, 0.0001);
   });
 
   it("should throw if getRateFromECB returns falsy", async () => {

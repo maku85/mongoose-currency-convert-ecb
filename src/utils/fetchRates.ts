@@ -43,8 +43,8 @@ export async function getRateFromECB(from: string, to: string, date?: Date): Pro
     throw new Error(`Conversion not supported for ${base} to ${symbol} on ${day}`);
   }
 
-  if (base === "EUR") return await fetchBceRate(symbol, day);
-  if (symbol === "EUR") return 1 / (await fetchBceRate(base, day));
+  if (base === "EUR") return 1 / (await fetchBceRate(symbol, day));
+  if (symbol === "EUR") return await fetchBceRate(base, day);
 
   const [rateBase, rateSymbol] = await Promise.all([
     fetchBceRate(base, day),

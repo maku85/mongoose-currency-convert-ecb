@@ -8,6 +8,7 @@ export function createEcbGetRate(): GetRateFn {
 
     const rate = await getRateFromECB(from, to, date);
     if (!rate) throw new Error(`No rate for ${to}`);
-    return from === "EUR" ? rate : 1 / rate;
+
+    return rate;
   };
 }
