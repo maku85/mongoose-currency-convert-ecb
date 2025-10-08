@@ -1,6 +1,6 @@
 {
   "name": "mongoose-currency-convert-ecb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "ECB currency rate provider for mongoose-currency-convert",
   "keywords": [
     "mongoose",
