@@ -1,12 +1,25 @@
 # Pull Request
 
-**Description**
-Explain what this PR fixes/adds.
+## Type of change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Refactor / code quality
+- [ ] Tests
+- [ ] Documentation
+- [ ] CI / tooling
 
-**Checklist**
-- [ ] Code has been tested
-- [ ] Documentation is updated
-- [ ] No lint/test errors
+## Related issue
+Closes #
 
-**Additional Notes**
-Add any useful details for the review.
+## Description
+<!-- What does this PR change and why? -->
+
+## Testing
+<!-- How was this change tested? Include relevant test names or describe manual steps. -->
+
+## Checklist
+- [ ] All existing tests pass
+- [ ] New tests added for new behaviour
+- [ ] TypeScript types correct (no `any`, new public symbols exported)
+- [ ] JSDoc updated for changed public functions
+- [ ] No breaking changes — or breaking changes are documented above

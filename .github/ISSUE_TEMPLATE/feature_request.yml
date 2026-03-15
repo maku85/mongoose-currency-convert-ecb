@@ -1,0 +1,60 @@
+name: Feature Request
+description: Suggest an improvement or new feature for mongoose-currency-convert-ecb
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a request, please check the [open issues](../../issues) to avoid duplicates.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the library does this relate to?
+      options:
+        - Rate fetching (ECB API)
+        - Historical / static rates
+        - Error handling
+        - Configuration options
+        - TypeScript types / exports
+        - Testing
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What limitation or missing capability prompted this request?
+      placeholder: |
+        When converting a large number of documents, every conversion triggers a separate HTTP
+        request to the ECB API even for the same currency pair and date.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the feature and, if possible, how it could look in code.
+      render: typescript
+      placeholder: |
+        // Example of desired API
+        const getRate = createEcbGetRate({ retries: 3 });
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you are currently using or other approaches you evaluated.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Links, references, or other useful context.
