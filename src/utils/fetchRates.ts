@@ -5,7 +5,7 @@ const MIN_ECB_DATE = new Date("1999-01-04");
 const OBS_VALUE_REGEX = /ObsValue value="([0-9.]+)"/;
 const OBS_DATE_REGEX = /ObsDimension value="(\d{4}-\d{2}-\d{2})"/;
 
-async function fetchBceRate(currency: string, day: string): Promise<number> {
+async function fetchBceRate(currency: string, day: string, timeoutMs: number): Promise<number> {
   if (day) {
     const d = new Date(day);
     if (d < MIN_ECB_DATE) {
@@ -15,7 +15,19 @@ async function fetchBceRate(currency: string, day: string): Promise<number> {
 
   let url = `https://data-api.ecb.europa.eu/service/data/EXR/D.${currency}.EUR..?detail=dataonly&lastNObservations=1`;
   if (day) url += `&endPeriod=${day}`;
-  const res = await fetch(url, { headers: { Accept: "application/xml" } });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { Accept: "application/xml" }, signal: controller.signal });
+  } catch (err) {
+    if ((err as Error).name === "AbortError")
+      throw new Error(`ECB API request timed out after ${timeoutMs}ms`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) throw new Error(`ECB API error: ${res.status} ${res.statusText}`);
 
   const xml = await res.text();
@@ -34,7 +46,12 @@ async function fetchBceRate(currency: string, day: string): Promise<number> {
   return value;
 }
 
-export async function getRateFromECB(from: string, to: string, date?: Date): Promise<number> {
+export async function getRateFromECB(
+  from: string,
+  to: string,
+  date?: Date,
+  timeoutMs = 10_000,
+): Promise<number> {
   const base = from.toUpperCase();
   const symbol = to.toUpperCase();
 
@@ -58,12 +75,12 @@ export async function getRateFromECB(from: string, to: string, date?: Date): Pro
     throw new Error(`Conversion not supported for ${base} to ${symbol} on ${day}`);
   }
 
-  if (base === "EUR") return await fetchBceRate(symbol, day);
-  if (symbol === "EUR") return 1 / (await fetchBceRate(base, day));
+  if (base === "EUR") return await fetchBceRate(symbol, day, timeoutMs);
+  if (symbol === "EUR") return 1 / (await fetchBceRate(base, day, timeoutMs));
 
   const [rateBase, rateSymbol] = await Promise.all([
-    fetchBceRate(base, day),
-    fetchBceRate(symbol, day),
+    fetchBceRate(base, day, timeoutMs),
+    fetchBceRate(symbol, day, timeoutMs),
   ]);
   return rateSymbol / rateBase;
 }
