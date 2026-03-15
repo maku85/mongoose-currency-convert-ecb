@@ -10,7 +10,7 @@ Thank you for your interest in contributing! Please follow these guidelines to h
    git checkout -b feat/my-feature
    ```
 3. **Write clear, tested code**. Add or update unit tests as needed.
-4. **Follow the Conventional Commits** format for commit messages (required for semantic-release):
+4. **Follow the Conventional Commits** format for commit messages (required by `commit-and-tag-version`):
    - Example: `feat: add support for new currency provider`
 5. **Run all tests** before submitting:
    ```sh
@@ -25,7 +25,7 @@ Thank you for your interest in contributing! Please follow these guidelines to h
   ```sh
   pnpm lint
   ```
-- Format code with Prettier:
+- Format code with Biome:
   ```sh
   pnpm format
   ```
