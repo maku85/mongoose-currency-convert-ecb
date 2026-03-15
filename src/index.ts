@@ -3,6 +3,8 @@ import type { GetRateFn } from "mongoose-currency-convert";
 import type { EcbGetRateOptions } from "./types";
 import { getRateFromECB } from "./utils/fetchRates";
 
+export { HISTORICAL_CURRENCY_CODES } from "./utils/staticRates";
+
 export function createEcbGetRate(options: EcbGetRateOptions = {}): GetRateFn {
   const { timeoutMs = 10_000, retries = 0, retryDelayMs = 500 } = options;
 

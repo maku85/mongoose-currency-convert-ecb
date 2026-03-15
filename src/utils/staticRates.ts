@@ -1,3 +1,25 @@
+export const HISTORICAL_CURRENCY_CODES: readonly string[] = [
+  "ITL",
+  "DEM",
+  "FRF",
+  "ESP",
+  "ATS",
+  "BEF",
+  "FIM",
+  "GRD",
+  "IEP",
+  "LUF",
+  "NLG",
+  "PTE",
+  "CYP",
+  "EEK",
+  "MTL",
+  "SIT",
+  "SKK",
+  "LVL",
+  "LTL",
+] as const;
+
 const STATIC_EURO_RATES: Record<string, number> = {
   ITL: 1936.27, // Italian lira
   DEM: 1.95583, // German mark
