@@ -102,6 +102,27 @@ async function fetchBceRate(
   throw lastError;
 }
 
+/**
+ * Fetches the exchange rate between two currencies using the ECB Data Portal API.
+ *
+ * All conversions are EUR-based: non-EUR pairs are resolved via two API calls (X→EUR and Y→EUR).
+ * For dates before 1999-01-04, fixed irrevocable eurozone rates are used for the 19 historical
+ * currencies; non-historical currencies on those dates will throw {@link EcbUnsupportedConversionError}.
+ *
+ * @param from - ISO 4217 source currency code (e.g. `"USD"`).
+ * @param to - ISO 4217 target currency code (e.g. `"EUR"`).
+ * @param date - Optional reference date. Uses the latest available rate when omitted.
+ * @param timeoutMs - HTTP request timeout in milliseconds. Default: `10_000`.
+ * @param retries - Number of retry attempts on network errors or HTTP 5xx responses. Default: `0`.
+ * @param retryDelayMs - Delay in milliseconds between retry attempts. Default: `500`.
+ * @returns The exchange rate as a positive number (amount of `to` per 1 unit of `from`).
+ *
+ * @throws {EcbInvalidCurrencyError} If either currency code is not a valid 3-letter ISO 4217 code.
+ * @throws {EcbDateOutOfRangeError} If `date` is before 1999-01-04 and the currencies require an API call.
+ * @throws {EcbUnsupportedConversionError} If `date` is before 1999-01-04 and the pair cannot be resolved with static rates.
+ * @throws {EcbRateNotFoundError} If the ECB response does not contain a valid rate.
+ * @throws {EcbNetworkError} If the HTTP request fails or times out after all retry attempts.
+ */
 export async function getRateFromECB(
   from: string,
   to: string,
