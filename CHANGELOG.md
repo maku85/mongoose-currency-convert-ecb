@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.4](https://github.com/maku85/mongoose-currency-convert-ecb/compare/v0.1.3...v0.1.4) (2026-03-15)
+
+
+### Bug Fixes
+
+* downgrade actions versions in release workflow for compatibility ([8e03607](https://github.com/maku85/mongoose-currency-convert-ecb/commit/8e03607c05cea4f8c72935c9abad83f944ba570e))
+* update lock file ([85535fa](https://github.com/maku85/mongoose-currency-convert-ecb/commit/85535fa14209abb9b44152e2ef789f133f696417))
+
 ## [0.1.3](https://github.com/maku85/mongoose-currency-convert-ecb/compare/v0.1.2...v0.1.3) (2026-03-15)
 
 
