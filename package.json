@@ -19,9 +19,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maku85/mongoose-currency-convert.git"
+    "url": "git+https://github.com/maku85/mongoose-currency-convert-ecb.git"
   },
-  "homepage": "https://github.com/maku85/mongoose-currency-convert#readme",
+  "homepage": "https://github.com/maku85/mongoose-currency-convert-ecb#readme",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -48,7 +48,7 @@
     "release:dry": "commit-and-tag-version --dry-run",
     "test": "mocha --config .mocharc.json",
     "test:watch": "mocha --watch --config .mocharc.json",
-    "coverage": "nyc npm test"
+    "coverage": "nyc mocha --config .mocharc.json"
   },
   "peerDependencies": {
     "mongoose-currency-convert": "^0.1.0"

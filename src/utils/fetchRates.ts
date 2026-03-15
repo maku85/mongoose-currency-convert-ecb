@@ -19,6 +19,7 @@ interface EcbXmlParsed {
   GenericData?: { DataSet?: { Series?: { Obs?: EcbXmlObs | EcbXmlObs[] } } };
 }
 
+const ISO4217 = /^[A-Z]{3}$/;
 const MIN_ECB_DATE = new Date("1999-01-04");
 const XML_PARSER = new XMLParser({
   ignoreAttributes: false,
@@ -138,7 +139,6 @@ export async function getRateFromECB(
   const base = from.toUpperCase();
   const symbol = to.toUpperCase();
 
-  const ISO4217 = /^[A-Z]{3}$/;
   if (!ISO4217.test(base)) throw new EcbInvalidCurrencyError(`Invalid currency code: "${from}"`);
   if (!ISO4217.test(symbol)) throw new EcbInvalidCurrencyError(`Invalid currency code: "${to}"`);
 
