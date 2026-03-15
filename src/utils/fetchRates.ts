@@ -22,7 +22,8 @@ async function fetchBceRate(currency: string, day: string): Promise<number> {
   if (!match || !match[1]) throw new Error(`Missing rate for ${currency} on ${day}`);
 
   const value = parseFloat(match[1]);
-  if (!isFinite(value) || value <= 0) throw new Error(`Invalid rate value for ${currency} on ${day}: "${match[1]}"`);
+  if (!isFinite(value) || value <= 0)
+    throw new Error(`Invalid rate value for ${currency} on ${day}: "${match[1]}"`);
   return value;
 }
 

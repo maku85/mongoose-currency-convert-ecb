@@ -1,3 +1,7 @@
 export function normalizeDate(date?: Date): string {
-  return date ? date.toISOString().slice(0, 10) : "";
+  if (!date) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
