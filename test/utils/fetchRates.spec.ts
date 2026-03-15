@@ -8,13 +8,16 @@ const { expect } = chai;
 
 describe("FetchRates utility", () => {
   afterEach(() => {
-     delete (global as any).fetch;
+     delete (global as Record<string, unknown>).fetch;
   });
 
+  const sdmxXml = (value: string) =>
+    `<GenericData><DataSet><Series><Obs><ObsDimension value="2024-01-05"/><ObsValue value="${value}"/></Obs></Series></DataSet></GenericData>`;
+
   it("should convert EUR to USD", async () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
-      text: async () => '<ObsValue value="1.12"/>'
+      text: async () => sdmxXml("1.12"),
     }) as Response;
 
     const rate = await getRateFromECB("EUR", "USD");
@@ -23,9 +26,9 @@ describe("FetchRates utility", () => {
   });
 
   it("should convert USD to EUR", async () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
-      text: async () => '<ObsValue value="1.25"/>'
+      text: async () => sdmxXml("1.25"),
     }) as Response;
 
     const rate = await getRateFromECB("USD", "EUR");
@@ -35,18 +38,15 @@ describe("FetchRates utility", () => {
 
   it("should convert USD to GBP via EUR", async () => {
     let call = 0;
-    (global as any).fetch = async () => {
+    (global as Record<string, unknown>).fetch = async () => {
       call++;
-      if (call === 1) {
-        return { ok: true, text: async () => '<ObsValue value="1.25"/>' } as Response; // USD/EUR
-      } else {
-        return { ok: true, text: async () => '<ObsValue value="0.85"/>' } as Response; // GBP/EUR
-      }
+      const xml = sdmxXml(call === 1 ? "1.25" : "0.85");
+      return { ok: true, text: async () => xml } as Response;
     };
 
     const rate = await getRateFromECB("USD", "GBP");
 
-  expect(rate).to.be.closeTo(0.85 / 1.25, 0.0001);
+    expect(rate).to.be.closeTo(0.85 / 1.25, 0.0001);
   });
 
   it("should return 1 for EUR to EUR", async () => {
@@ -56,20 +56,20 @@ describe("FetchRates utility", () => {
   });
 
   it("should throw if rate missing for EUR to USD", () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
-      text: async () => '<ObsValue value=""/>'
+      text: async () => sdmxXml(""),
     }) as Response;
 
     return expect(getRateFromECB("EUR", "USD")).to.eventually.be.rejectedWith(Error);
   });
 
   it("should throw if fetch not ok", () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: false,
       status: 500,
       statusText: "Internal Error",
-      text: async () => ""
+      text: async () => "",
     }) as Response;
 
     return expect(getRateFromECB("EUR", "USD")).to.eventually.be.rejectedWith(Error);
@@ -103,7 +103,7 @@ describe("FetchRates utility", () => {
   });
 
   it("should throw specific error for date before 1999-01-04", async () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
       text: async () => '<ObsValue value="1.12"/>'
     }) as Response;

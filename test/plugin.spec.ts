@@ -8,7 +8,7 @@ const { expect } = chai;
 
 describe("createEcbGetRate", () => {
   afterEach(() => {
-    delete (global as any).fetch;
+    delete (global as Record<string, unknown>).fetch;
   });
 
   it("should return 1 if currencies are equal", async () => {
@@ -19,10 +19,13 @@ describe("createEcbGetRate", () => {
     expect(result).to.equal(1);
   });
 
+  const sdmxXml = (value: string) =>
+    `<GenericData><DataSet><Series><Obs><ObsDimension value="2024-01-05"/><ObsValue value="${value}"/></Obs></Series></DataSet></GenericData>`;
+
   it("should return direct rate if from is EUR", async () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
-      text: async () => '<ObsValue value="1.5"/>'
+      text: async () => sdmxXml("1.5"),
     }) as Response;
 
     const getRate = pluginModule.createEcbGetRate();
@@ -32,21 +35,21 @@ describe("createEcbGetRate", () => {
   });
 
   it("should return inverse rate if from is not EUR", async () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
-      text: async () => '<ObsValue value="2"/>'
+      text: async () => sdmxXml("2"),
     }) as Response;
 
     const getRate = pluginModule.createEcbGetRate();
 
     const result = await getRate("USD", "EUR");
-    expect(result).to.be.closeTo(1/2, 0.0001);
+    expect(result).to.be.closeTo(1 / 2, 0.0001);
   });
 
   it("should throw if getRateFromECB returns falsy", async () => {
-    (global as any).fetch = async () => ({
+    (global as Record<string, unknown>).fetch = async () => ({
       ok: true,
-      text: async () => '<ObsValue value=""/>'
+      text: async () => sdmxXml(""),
     }) as Response;
 
     const getRate = pluginModule.createEcbGetRate();

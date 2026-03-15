@@ -1,9 +1,23 @@
+import { XMLParser } from "fast-xml-parser";
+
 import STATIC_EURO_RATES from "./staticRates";
 import { normalizeDate } from "./date";
 
+interface EcbXmlObs {
+  ObsDimension?: { "@_value"?: string };
+  ObsValue?: { "@_value"?: string };
+}
+
+interface EcbXmlParsed {
+  GenericData?: { DataSet?: { Series?: { Obs?: EcbXmlObs | EcbXmlObs[] } } };
+}
+
 const MIN_ECB_DATE = new Date("1999-01-04");
-const OBS_VALUE_REGEX = /ObsValue value="([0-9.]+)"/;
-const OBS_DATE_REGEX = /ObsDimension value="(\d{4}-\d{2}-\d{2})"/;
+const XML_PARSER = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
+  removeNSPrefix: true,
+});
 
 async function fetchBceRate(currency: string, day: string, timeoutMs: number): Promise<number> {
   if (day) {
@@ -31,18 +45,29 @@ async function fetchBceRate(currency: string, day: string, timeoutMs: number): P
   if (!res.ok) throw new Error(`ECB API error: ${res.status} ${res.statusText}`);
 
   const xml = await res.text();
-  const match = xml.match(OBS_VALUE_REGEX);
-  if (!match || !match[1]) throw new Error(`Missing rate for ${currency} on ${day}`);
 
-  const dateMatch = xml.match(OBS_DATE_REGEX);
-  const actualDate = dateMatch?.[1];
+  let parsed: unknown;
+  try {
+    parsed = XML_PARSER.parse(xml);
+  } catch {
+    throw new Error(`Failed to parse ECB response for ${currency} on ${day}`);
+  }
+
+  const rawObs = (parsed as EcbXmlParsed)?.GenericData?.DataSet?.Series?.Obs;
+  const obs = Array.isArray(rawObs) ? rawObs[0] : rawObs;
+  if (!obs) throw new Error(`Missing rate for ${currency} on ${day}`);
+
+  const actualDate: string | undefined = obs?.ObsDimension?.["@_value"];
   if (day && actualDate && actualDate !== day) {
     throw new Error(`No ECB rate for ${currency} on ${day} (nearest available: ${actualDate})`);
   }
 
-  const value = parseFloat(match[1]);
-  if (!isFinite(value) || value <= 0)
-    throw new Error(`Invalid rate value for ${currency} on ${day}: "${match[1]}"`);
+  const rawValue: string | undefined = obs?.ObsValue?.["@_value"];
+  if (!rawValue) throw new Error(`Missing rate for ${currency} on ${day}`);
+
+  const value = parseFloat(rawValue);
+  if (!Number.isFinite(value) || value <= 0)
+    throw new Error(`Invalid rate value for ${currency} on ${day}: "${rawValue}"`);
   return value;
 }
 

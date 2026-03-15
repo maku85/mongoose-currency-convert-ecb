@@ -10,7 +10,7 @@ export function createEcbGetRate(options: EcbGetRateOptions = {}): GetRateFn {
     if (from === to) return 1;
 
     const rate = await getRateFromECB(from, to, date, timeoutMs);
-    if (!isFinite(rate) || rate <= 0) throw new Error(`No rate for ${from} to ${to}`);
+    if (!Number.isFinite(rate) || rate <= 0) throw new Error(`No rate for ${from} to ${to}`);
 
     return rate;
   };
