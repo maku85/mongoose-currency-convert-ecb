@@ -1,6 +1,5 @@
 {
   "require": ["ts-node/register"],
-  "env": { "TS_NODE_PROJECT": "tsconfig.test.json" },
   "extension": ["ts"],
   "spec": ["test/**/*.spec.ts"],
   "recursive": true,

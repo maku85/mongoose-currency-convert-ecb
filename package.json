@@ -46,9 +46,9 @@
     "release:minor": "commit-and-tag-version --release-as minor",
     "release:major": "commit-and-tag-version --release-as major",
     "release:dry": "commit-and-tag-version --dry-run",
-    "test": "mocha --config .mocharc.json",
-    "test:watch": "mocha --watch --config .mocharc.json",
-    "coverage": "nyc mocha --config .mocharc.json"
+    "test": "TS_NODE_PROJECT=tsconfig.test.json mocha --config .mocharc.json",
+    "test:watch": "TS_NODE_PROJECT=tsconfig.test.json mocha --watch --config .mocharc.json",
+    "coverage": "TS_NODE_PROJECT=tsconfig.test.json nyc mocha --config .mocharc.json"
   },
   "peerDependencies": {
     "mongoose-currency-convert": "^0.1.0"
