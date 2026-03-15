@@ -45,7 +45,7 @@ export async function getRateFromECB(from: string, to: string, date?: Date): Pro
   if (base === symbol) return 1;
 
   const day = normalizeDate(date);
-  const isStaticDate = day && new Date(day) < MIN_ECB_DATE;
+  const isStaticDate = !!day && new Date(day) < MIN_ECB_DATE;
   const isBaseStatic = base in STATIC_EURO_RATES;
   const isSymbolStatic = symbol in STATIC_EURO_RATES;
 
