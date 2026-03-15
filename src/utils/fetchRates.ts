@@ -21,7 +21,9 @@ async function fetchBceRate(currency: string, day: string): Promise<number> {
   const match = xml.match(OBS_VALUE_REGEX);
   if (!match || !match[1]) throw new Error(`Missing rate for ${currency} on ${day}`);
 
-  return parseFloat(match[1]);
+  const value = parseFloat(match[1]);
+  if (!isFinite(value) || value <= 0) throw new Error(`Invalid rate value for ${currency} on ${day}: "${match[1]}"`);
+  return value;
 }
 
 export async function getRateFromECB(from: string, to: string, date?: Date): Promise<number> {
