@@ -1,5 +1,12 @@
 import { XMLParser } from "fast-xml-parser";
 
+import {
+  EcbDateOutOfRangeError,
+  EcbInvalidCurrencyError,
+  EcbNetworkError,
+  EcbRateNotFoundError,
+  EcbUnsupportedConversionError,
+} from "../types";
 import STATIC_EURO_RATES from "./staticRates";
 import { normalizeDate } from "./date";
 
@@ -29,14 +36,16 @@ async function fetchBceRate(
   if (day) {
     const d = new Date(day);
     if (d < MIN_ECB_DATE) {
-      throw new Error(`No ECB rates available before 4 January 1999 (requested: ${day})`);
+      throw new EcbDateOutOfRangeError(
+        `No ECB rates available before 4 January 1999 (requested: ${day})`,
+      );
     }
   }
 
   let url = `https://data-api.ecb.europa.eu/service/data/EXR/D.${currency}.EUR..?detail=dataonly&lastNObservations=1`;
   if (day) url += `&endPeriod=${day}`;
 
-  let lastError: Error = new Error("Unknown error");
+  let lastError: Error = new EcbNetworkError("Unknown error");
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
 
@@ -49,17 +58,17 @@ async function fetchBceRate(
       clearTimeout(timer);
       lastError =
         (err as Error).name === "AbortError"
-          ? new Error(`ECB API request timed out after ${timeoutMs}ms`)
-          : (err as Error);
+          ? new EcbNetworkError(`ECB API request timed out after ${timeoutMs}ms`)
+          : new EcbNetworkError((err as Error).message);
       continue;
     }
     clearTimeout(timer);
 
     if (res.status >= 500) {
-      lastError = new Error(`ECB API error: ${res.status} ${res.statusText}`);
+      lastError = new EcbNetworkError(`ECB API error: ${res.status} ${res.statusText}`);
       continue;
     }
-    if (!res.ok) throw new Error(`ECB API error: ${res.status} ${res.statusText}`);
+    if (!res.ok) throw new EcbNetworkError(`ECB API error: ${res.status} ${res.statusText}`);
 
     const xml = await res.text();
 
@@ -67,24 +76,26 @@ async function fetchBceRate(
     try {
       parsed = XML_PARSER.parse(xml);
     } catch {
-      throw new Error(`Failed to parse ECB response for ${currency} on ${day}`);
+      throw new EcbRateNotFoundError(`Failed to parse ECB response for ${currency} on ${day}`);
     }
 
     const rawObs = (parsed as EcbXmlParsed)?.GenericData?.DataSet?.Series?.Obs;
     const obs = Array.isArray(rawObs) ? rawObs[0] : rawObs;
-    if (!obs) throw new Error(`Missing rate for ${currency} on ${day}`);
+    if (!obs) throw new EcbRateNotFoundError(`Missing rate for ${currency} on ${day}`);
 
     const actualDate: string | undefined = obs?.ObsDimension?.["@_value"];
     if (day && actualDate && actualDate !== day) {
-      throw new Error(`No ECB rate for ${currency} on ${day} (nearest available: ${actualDate})`);
+      throw new EcbRateNotFoundError(
+        `No ECB rate for ${currency} on ${day} (nearest available: ${actualDate})`,
+      );
     }
 
     const rawValue: string | undefined = obs?.ObsValue?.["@_value"];
-    if (!rawValue) throw new Error(`Missing rate for ${currency} on ${day}`);
+    if (!rawValue) throw new EcbRateNotFoundError(`Missing rate for ${currency} on ${day}`);
 
     const value = parseFloat(rawValue);
     if (!Number.isFinite(value) || value <= 0)
-      throw new Error(`Invalid rate value for ${currency} on ${day}: "${rawValue}"`);
+      throw new EcbRateNotFoundError(`Invalid rate value for ${currency} on ${day}: "${rawValue}"`);
     return value;
   }
 
@@ -103,8 +114,8 @@ export async function getRateFromECB(
   const symbol = to.toUpperCase();
 
   const ISO4217 = /^[A-Z]{3}$/;
-  if (!ISO4217.test(base)) throw new Error(`Invalid currency code: "${from}"`);
-  if (!ISO4217.test(symbol)) throw new Error(`Invalid currency code: "${to}"`);
+  if (!ISO4217.test(base)) throw new EcbInvalidCurrencyError(`Invalid currency code: "${from}"`);
+  if (!ISO4217.test(symbol)) throw new EcbInvalidCurrencyError(`Invalid currency code: "${to}"`);
 
   if (base === symbol) return 1;
 
@@ -119,7 +130,9 @@ export async function getRateFromECB(
     if (isBaseStatic && isSymbolStatic) {
       return STATIC_EURO_RATES[symbol] / STATIC_EURO_RATES[base];
     }
-    throw new Error(`Conversion not supported for ${base} to ${symbol} on ${day}`);
+    throw new EcbUnsupportedConversionError(
+      `Conversion not supported for ${base} to ${symbol} on ${day}`,
+    );
   }
 
   if (base === "EUR") return await fetchBceRate(symbol, day, timeoutMs, retries, retryDelayMs);

@@ -1,8 +1,23 @@
 import type { GetRateFn } from "mongoose-currency-convert";
 
-import type { EcbGetRateOptions } from "./types";
+import {
+  type EcbGetRateOptions,
+  EcbDateOutOfRangeError,
+  EcbInvalidCurrencyError,
+  EcbNetworkError,
+  EcbRateNotFoundError,
+  EcbUnsupportedConversionError,
+} from "./types";
 import { getRateFromECB } from "./utils/fetchRates";
 
+export {
+  EcbDateOutOfRangeError,
+  EcbInvalidCurrencyError,
+  EcbNetworkError,
+  EcbRateNotFoundError,
+  EcbUnsupportedConversionError,
+};
+export type { EcbGetRateOptions };
 export { HISTORICAL_CURRENCY_CODES } from "./utils/staticRates";
 
 export function createEcbGetRate(options: EcbGetRateOptions = {}): GetRateFn {
@@ -12,7 +27,8 @@ export function createEcbGetRate(options: EcbGetRateOptions = {}): GetRateFn {
     if (from === to) return 1;
 
     const rate = await getRateFromECB(from, to, date, timeoutMs, retries, retryDelayMs);
-    if (!Number.isFinite(rate) || rate <= 0) throw new Error(`No rate for ${from} to ${to}`);
+    if (!Number.isFinite(rate) || rate <= 0)
+      throw new EcbRateNotFoundError(`No rate for ${from} to ${to}`);
 
     return rate;
   };
