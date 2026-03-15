@@ -19,7 +19,13 @@ const XML_PARSER = new XMLParser({
   removeNSPrefix: true,
 });
 
-async function fetchBceRate(currency: string, day: string, timeoutMs: number): Promise<number> {
+async function fetchBceRate(
+  currency: string,
+  day: string,
+  timeoutMs: number,
+  retries: number,
+  retryDelayMs: number,
+): Promise<number> {
   if (day) {
     const d = new Date(day);
     if (d < MIN_ECB_DATE) {
@@ -30,45 +36,59 @@ async function fetchBceRate(currency: string, day: string, timeoutMs: number): P
   let url = `https://data-api.ecb.europa.eu/service/data/EXR/D.${currency}.EUR..?detail=dataonly&lastNObservations=1`;
   if (day) url += `&endPeriod=${day}`;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  let res: Response;
-  try {
-    res = await fetch(url, { headers: { Accept: "application/xml" }, signal: controller.signal });
-  } catch (err) {
-    if ((err as Error).name === "AbortError")
-      throw new Error(`ECB API request timed out after ${timeoutMs}ms`);
-    throw err;
-  } finally {
+  let lastError: Error = new Error("Unknown error");
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let res: Response;
+    try {
+      res = await fetch(url, { headers: { Accept: "application/xml" }, signal: controller.signal });
+    } catch (err) {
+      clearTimeout(timer);
+      lastError =
+        (err as Error).name === "AbortError"
+          ? new Error(`ECB API request timed out after ${timeoutMs}ms`)
+          : (err as Error);
+      continue;
+    }
     clearTimeout(timer);
+
+    if (res.status >= 500) {
+      lastError = new Error(`ECB API error: ${res.status} ${res.statusText}`);
+      continue;
+    }
+    if (!res.ok) throw new Error(`ECB API error: ${res.status} ${res.statusText}`);
+
+    const xml = await res.text();
+
+    let parsed: unknown;
+    try {
+      parsed = XML_PARSER.parse(xml);
+    } catch {
+      throw new Error(`Failed to parse ECB response for ${currency} on ${day}`);
+    }
+
+    const rawObs = (parsed as EcbXmlParsed)?.GenericData?.DataSet?.Series?.Obs;
+    const obs = Array.isArray(rawObs) ? rawObs[0] : rawObs;
+    if (!obs) throw new Error(`Missing rate for ${currency} on ${day}`);
+
+    const actualDate: string | undefined = obs?.ObsDimension?.["@_value"];
+    if (day && actualDate && actualDate !== day) {
+      throw new Error(`No ECB rate for ${currency} on ${day} (nearest available: ${actualDate})`);
+    }
+
+    const rawValue: string | undefined = obs?.ObsValue?.["@_value"];
+    if (!rawValue) throw new Error(`Missing rate for ${currency} on ${day}`);
+
+    const value = parseFloat(rawValue);
+    if (!Number.isFinite(value) || value <= 0)
+      throw new Error(`Invalid rate value for ${currency} on ${day}: "${rawValue}"`);
+    return value;
   }
-  if (!res.ok) throw new Error(`ECB API error: ${res.status} ${res.statusText}`);
 
-  const xml = await res.text();
-
-  let parsed: unknown;
-  try {
-    parsed = XML_PARSER.parse(xml);
-  } catch {
-    throw new Error(`Failed to parse ECB response for ${currency} on ${day}`);
-  }
-
-  const rawObs = (parsed as EcbXmlParsed)?.GenericData?.DataSet?.Series?.Obs;
-  const obs = Array.isArray(rawObs) ? rawObs[0] : rawObs;
-  if (!obs) throw new Error(`Missing rate for ${currency} on ${day}`);
-
-  const actualDate: string | undefined = obs?.ObsDimension?.["@_value"];
-  if (day && actualDate && actualDate !== day) {
-    throw new Error(`No ECB rate for ${currency} on ${day} (nearest available: ${actualDate})`);
-  }
-
-  const rawValue: string | undefined = obs?.ObsValue?.["@_value"];
-  if (!rawValue) throw new Error(`Missing rate for ${currency} on ${day}`);
-
-  const value = parseFloat(rawValue);
-  if (!Number.isFinite(value) || value <= 0)
-    throw new Error(`Invalid rate value for ${currency} on ${day}: "${rawValue}"`);
-  return value;
+  throw lastError;
 }
 
 export async function getRateFromECB(
@@ -76,6 +96,8 @@ export async function getRateFromECB(
   to: string,
   date?: Date,
   timeoutMs = 10_000,
+  retries = 0,
+  retryDelayMs = 500,
 ): Promise<number> {
   const base = from.toUpperCase();
   const symbol = to.toUpperCase();
@@ -100,12 +122,13 @@ export async function getRateFromECB(
     throw new Error(`Conversion not supported for ${base} to ${symbol} on ${day}`);
   }
 
-  if (base === "EUR") return await fetchBceRate(symbol, day, timeoutMs);
-  if (symbol === "EUR") return 1 / (await fetchBceRate(base, day, timeoutMs));
+  if (base === "EUR") return await fetchBceRate(symbol, day, timeoutMs, retries, retryDelayMs);
+  if (symbol === "EUR")
+    return 1 / (await fetchBceRate(base, day, timeoutMs, retries, retryDelayMs));
 
   const [rateBase, rateSymbol] = await Promise.all([
-    fetchBceRate(base, day, timeoutMs),
-    fetchBceRate(symbol, day, timeoutMs),
+    fetchBceRate(base, day, timeoutMs, retries, retryDelayMs),
+    fetchBceRate(symbol, day, timeoutMs, retries, retryDelayMs),
   ]);
   return rateSymbol / rateBase;
 }

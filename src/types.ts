@@ -5,4 +5,6 @@ export interface ECBResponse {
 
 export interface EcbGetRateOptions {
   timeoutMs?: number;
+  retries?: number;
+  retryDelayMs?: number;
 }
