@@ -3,6 +3,7 @@ import { normalizeDate } from "./date";
 
 const MIN_ECB_DATE = new Date("1999-01-04");
 const OBS_VALUE_REGEX = /ObsValue value="([0-9.]+)"/;
+const OBS_DATE_REGEX = /ObsDimension value="(\d{4}-\d{2}-\d{2})"/;
 
 async function fetchBceRate(currency: string, day: string): Promise<number> {
   if (day) {
@@ -20,6 +21,12 @@ async function fetchBceRate(currency: string, day: string): Promise<number> {
   const xml = await res.text();
   const match = xml.match(OBS_VALUE_REGEX);
   if (!match || !match[1]) throw new Error(`Missing rate for ${currency} on ${day}`);
+
+  const dateMatch = xml.match(OBS_DATE_REGEX);
+  const actualDate = dateMatch?.[1];
+  if (day && actualDate && actualDate !== day) {
+    throw new Error(`No ECB rate for ${currency} on ${day} (nearest available: ${actualDate})`);
+  }
 
   const value = parseFloat(match[1]);
   if (!isFinite(value) || value <= 0)
