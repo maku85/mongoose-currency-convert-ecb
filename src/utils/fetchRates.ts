@@ -30,6 +30,11 @@ async function fetchBceRate(currency: string, day: string): Promise<number> {
 export async function getRateFromECB(from: string, to: string, date?: Date): Promise<number> {
   const base = from.toUpperCase();
   const symbol = to.toUpperCase();
+
+  const ISO4217 = /^[A-Z]{3}$/;
+  if (!ISO4217.test(base)) throw new Error(`Invalid currency code: "${from}"`);
+  if (!ISO4217.test(symbol)) throw new Error(`Invalid currency code: "${to}"`);
+
   if (base === symbol) return 1;
 
   const day = normalizeDate(date);
