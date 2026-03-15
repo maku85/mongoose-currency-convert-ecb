@@ -51,26 +51,30 @@ async function fetchBceRate(
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let res: Response;
+    let xml: string;
     try {
-      res = await fetch(url, { headers: { Accept: "application/xml" }, signal: controller.signal });
+      const res = await fetch(url, {
+        headers: { Accept: "application/xml" },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (res.status >= 500) {
+        lastError = new EcbNetworkError(`ECB API error: ${res.status} ${res.statusText}`);
+        continue;
+      }
+      if (!res.ok) throw new EcbNetworkError(`ECB API error: ${res.status} ${res.statusText}`);
+
+      xml = await res.text();
     } catch (err) {
       clearTimeout(timer);
+      if (err instanceof EcbNetworkError) throw err;
       lastError =
         (err as Error).name === "AbortError"
           ? new EcbNetworkError(`ECB API request timed out after ${timeoutMs}ms`)
           : new EcbNetworkError((err as Error).message);
       continue;
     }
-    clearTimeout(timer);
-
-    if (res.status >= 500) {
-      lastError = new EcbNetworkError(`ECB API error: ${res.status} ${res.statusText}`);
-      continue;
-    }
-    if (!res.ok) throw new EcbNetworkError(`ECB API error: ${res.status} ${res.statusText}`);
-
-    const xml = await res.text();
 
     let parsed: unknown;
     try {

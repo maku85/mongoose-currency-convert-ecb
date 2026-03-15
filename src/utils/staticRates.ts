@@ -1,25 +1,3 @@
-export const HISTORICAL_CURRENCY_CODES: readonly string[] = [
-  "ITL",
-  "DEM",
-  "FRF",
-  "ESP",
-  "ATS",
-  "BEF",
-  "FIM",
-  "GRD",
-  "IEP",
-  "LUF",
-  "NLG",
-  "PTE",
-  "CYP",
-  "EEK",
-  "MTL",
-  "SIT",
-  "SKK",
-  "LVL",
-  "LTL",
-] as const;
-
 const STATIC_EURO_RATES: Record<string, number> = {
   ITL: 1936.27, // Italian lira
   DEM: 1.95583, // German mark
@@ -41,5 +19,7 @@ const STATIC_EURO_RATES: Record<string, number> = {
   LVL: 0.702804, // Latvian lats
   LTL: 3.4528, // Lithuanian litas
 };
+
+export const HISTORICAL_CURRENCY_CODES: readonly string[] = Object.keys(STATIC_EURO_RATES);
 
 export default STATIC_EURO_RATES;
